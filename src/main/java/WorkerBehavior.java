@@ -23,9 +23,7 @@ public class WorkerBehavior extends AbstractBehavior<WorkerCommand> {
     }
 
     public static Behavior<WorkerCommand> create(String id) {
-        Behavior<WorkerCommand> behavior = Behaviors.setup(context -> new WorkerBehavior(context, id));
-        return Behaviors.supervise(behavior)
-                .onFailure(IllegalStateException.class, SupervisorStrategy.restart());
+        return Behaviors.setup(context -> new WorkerBehavior(context, id));
     }
 
     private BigInteger currentPrime;
@@ -42,7 +40,7 @@ public class WorkerBehavior extends AbstractBehavior<WorkerCommand> {
                     }
                     return this;
                 }).onMessage(StopCommand.class, message -> {
-                    logger.info("Received 'StopCommand' command. Actor "+ id + " is about to be stopped");
+                    logger.info("Received 'StopCommand' command. Actor " + id + " is about to be stopped");
                     return Behaviors.stopped();
                 }).build();
     }
