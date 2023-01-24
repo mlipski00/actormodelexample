@@ -41,9 +41,6 @@ public class WorkerBehavior extends AbstractBehavior<WorkerCommand> {
                         doWorkCommand.sender().tell(new ResultCommand(currentPrime, id));
                     }
                     return this;
-                }).onMessage(ThrowExceptionCommand.class, message -> {
-                    logger.info("Received 'ThrowExceptionCommand' command. Actor: "+ id);
-                    throw new IllegalStateException();
                 }).onMessage(StopCommand.class, message -> {
                     logger.info("Received 'StopCommand' command. Actor "+ id + " is about to be stopped");
                     return Behaviors.stopped();

@@ -41,7 +41,6 @@ public class ManagerBehavior extends AbstractBehavior<Command> {
                             workers.put(workerId, worker);
                             worker.tell(new DoWorkCommand("start", getContext().getSelf()));
                         }
-                        workers.get("worker13").tell(new ThrowExceptionCommand());
                     }
                     return this;
                 })
@@ -51,12 +50,10 @@ public class ManagerBehavior extends AbstractBehavior<Command> {
                     if (primes.size() % 30 == 0) {
                         logger.info("Computed primes: " + primes.size());
                         workers.forEach((k, v) -> v.tell(new StopCommand()));
-//                        return Behaviors.stopped();
                     } else {
                         workers.get(command.senderId()).tell(new DoWorkCommand("start", getContext().getSelf()));
                     }
                     return Behaviors.same();
-                })
-                .build();
+                }).build();
     }
 }
