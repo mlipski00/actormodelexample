@@ -4,6 +4,8 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
+import akka.actor.typed.receptionist.Receptionist;
+import akka.actor.typed.receptionist.ServiceKey;
 import commands.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,17 +15,23 @@ import java.util.Random;
 
 public class WorkerBehavior extends AbstractBehavior<WorkerCommand> {
 
+    public static ServiceKey<WorkerCommand> serviceKey = ServiceKey.create(WorkerCommand.class, "WorkerBehaviorServiceKey");
     private static final Logger logger = LoggerFactory.getLogger(WorkerBehavior.class);
+
+
     private final String id;
 
     private WorkerBehavior(ActorContext<WorkerCommand> context, String id) {
         super(context);
-        this.id = id;
+        this.id = id + "_" + getContext().getSystem().address().getPort().get();
         logger.info("Setup of worker with id " + id);
     }
 
     public static Behavior<WorkerCommand> create(String id) {
-        Behavior<WorkerCommand> behavior = Behaviors.setup(context -> new WorkerBehavior(context, id));
+        Behavior<WorkerCommand> behavior = Behaviors.setup(context -> {
+            context.getSystem().receptionist().tell(Receptionist.register(serviceKey, context.getSelf()));
+            return new WorkerBehavior(context, id);
+        });
         return Behaviors.supervise(behavior)
                 .onFailure(IllegalStateException.class, SupervisorStrategy.restart());
     }
@@ -45,7 +53,7 @@ public class WorkerBehavior extends AbstractBehavior<WorkerCommand> {
                     logger.info("Received 'ThrowExceptionCommand' command. Actor: "+ id);
                     throw new IllegalStateException();
                 }).onMessage(StopCommand.class, message -> {
-                    logger.info("Received 'StopCommand' command. Actor "+ id + " is about to be stopped");
+                    logger.info("Received 'StopCommand' command. Actor " + id + " is about to be stopped");
                     return Behaviors.stopped();
                 }).build();
     }
